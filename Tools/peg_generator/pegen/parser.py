@@ -164,7 +164,7 @@ class Parser:
 
     SOFT_KEYWORDS: ClassVar[Tuple[str, ...]]
 
-    def __init__(self, tokenizer: Tokenizer, *, verbose: bool = False):
+    def __init__(self, tokenizer: Tokenizer, *, verbose: bool = False, pirx_mode: bool = False):
         self._tokenizer = tokenizer
         self._verbose = verbose
         self._level = 0
@@ -175,6 +175,7 @@ class Parser:
         # Pass through common tokenizer methods.
         self._mark = self._tokenizer.mark
         self._reset = self._tokenizer.reset
+        self.pirx_mode = pirx_mode
 
     @abstractmethod
     def start(self) -> Any:

@@ -33,6 +33,7 @@ from pegen.grammar import (
     Rhs,
     Rule,
     RuleList,
+    RuleMode,
     RuleName,
     Grammar,
     StringLeaf,
@@ -147,12 +148,14 @@ class GeneratedParser(Parser):
 
     @memoize
     def rule(self) -> Optional[Rule]:
-        # rule: rulename memoflag? ":" alts NEWLINE INDENT more_alts DEDENT | rulename memoflag? ":" NEWLINE INDENT more_alts DEDENT | rulename memoflag? ":" alts NEWLINE
+        # rule: rulemode? rulename memoflag? ":" alts NEWLINE INDENT more_alts DEDENT | rulemode? rulename memoflag? ":" NEWLINE INDENT more_alts DEDENT | rulemode? rulename memoflag? ":" alts NEWLINE
         mark = self._mark()
         if (
+            (opt := self.rulemode(),)
+            and
             (rulename := self.rulename())
             and
-            (opt := self.memoflag(),)
+            (opt_1 := self.memoflag(),)
             and
             (literal := self.expect(":"))
             and
@@ -166,12 +169,14 @@ class GeneratedParser(Parser):
             and
             (_dedent := self.expect('DEDENT'))
         ):
-            return Rule ( rulename [0] , rulename [1] , Rhs ( alts . alts + more_alts . alts ) , memo = opt )
+            return Rule ( rulename [0] , rulename [1] , Rhs ( alts . alts + more_alts . alts ) , memo = opt_1 , mode = opt )
         self._reset(mark)
         if (
+            (opt := self.rulemode(),)
+            and
             (rulename := self.rulename())
             and
-            (opt := self.memoflag(),)
+            (opt_1 := self.memoflag(),)
             and
             (literal := self.expect(":"))
             and
@@ -183,12 +188,14 @@ class GeneratedParser(Parser):
             and
             (_dedent := self.expect('DEDENT'))
         ):
-            return Rule ( rulename [0] , rulename [1] , more_alts , memo = opt )
+            return Rule ( rulename [0] , rulename [1] , more_alts , memo = opt_1 , mode = opt )
         self._reset(mark)
         if (
+            (opt := self.rulemode(),)
+            and
             (rulename := self.rulename())
             and
-            (opt := self.memoflag(),)
+            (opt_1 := self.memoflag(),)
             and
             (literal := self.expect(":"))
             and
@@ -196,7 +203,31 @@ class GeneratedParser(Parser):
             and
             (_newline := self.expect('NEWLINE'))
         ):
-            return Rule ( rulename [0] , rulename [1] , alts , memo = opt )
+            return Rule ( rulename [0] , rulename [1] , alts , memo = opt_1 , mode = opt )
+        self._reset(mark)
+        return None
+
+    @memoize
+    def rulemode(self) -> Optional[RuleMode]:
+        # rulemode: "%" "pirx" NEWLINE | "%" "python" NEWLINE
+        mark = self._mark()
+        if (
+            (literal := self.expect("%"))
+            and
+            (literal_1 := self.expect("pirx"))
+            and
+            (_newline := self.expect('NEWLINE'))
+        ):
+            return RuleMode . PIRX
+        self._reset(mark)
+        if (
+            (literal := self.expect("%"))
+            and
+            (literal_1 := self.expect("python"))
+            and
+            (_newline := self.expect('NEWLINE'))
+        ):
+            return RuleMode . PYTHON
         self._reset(mark)
         return None
 
@@ -647,7 +678,7 @@ class GeneratedParser(Parser):
         return None
 
     KEYWORDS = ()
-    SOFT_KEYWORDS = ('memo',)
+    SOFT_KEYWORDS = ('pirx', 'memo', 'python')
 
 
 if __name__ == '__main__':

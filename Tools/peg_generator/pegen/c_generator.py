@@ -24,6 +24,7 @@ from pegen.grammar import (
     Repeat1,
     Rhs,
     Rule,
+    RuleMode,
     StringLeaf,
 )
 from pegen.parser_generator import ParserGenerator
@@ -58,6 +59,7 @@ _PyPegen_parse(Parser *p)
     p->keywords = reserved_keywords;
     p->n_keyword_lists = n_keyword_lists;
     p->soft_keywords = soft_keywords;
+    p->pirx_mode = 0;
 
     return start_rule(p);
 }
@@ -674,6 +676,11 @@ class CParserGenerator(ParserGenerator, GrammarVisitor):
             self._set_up_rule_memoization(node, result_type)
 
         self.print("{")
+
+        if node.mode == RuleMode.PIRX:
+            self.print("if (!p->pirx_mode) { return NULL; }")
+        if node.mode == RuleMode.PYTHON:
+            self.print("if (p->pirx_mode) { return NULL; }")
 
         if node.name.endswith("without_invalid"):
             with self.indent():

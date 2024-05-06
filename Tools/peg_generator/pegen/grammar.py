@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 from typing import (
     AbstractSet,
     Any,
@@ -65,14 +66,20 @@ class Grammar:
 SIMPLE_STR = True
 
 
+class RuleMode(enum.Enum):
+    PIRX = 1
+    PYTHON = 2
+
+
 class Rule:
-    def __init__(self, name: str, type: Optional[str], rhs: Rhs, memo: Optional[object] = None):
+    def __init__(self, name: str, type: Optional[str], rhs: Rhs, memo: Optional[object] = None, mode: Optional[RuleMode] = None):
         self.name = name
         self.type = type
         self.rhs = rhs
         self.memo = bool(memo)
         self.left_recursive = False
         self.leader = False
+        self.mode = mode
 
     def is_loop(self) -> bool:
         return self.name.startswith("_loop")

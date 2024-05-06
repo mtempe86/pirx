@@ -78,6 +78,7 @@ typedef struct {
     int level;
     int call_invalid_rules;
     int debug;
+    int pirx_mode;
 } Parser;
 
 typedef struct {

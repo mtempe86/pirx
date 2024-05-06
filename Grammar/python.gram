@@ -8,6 +8,7 @@ _PyPegen_parse(Parser *p)
     p->keywords = reserved_keywords;
     p->n_keyword_lists = n_keyword_lists;
     p->soft_keywords = soft_keywords;
+    p->pirx_mode = 0;
 
     // Run parser
     void *result = NULL;
@@ -83,10 +84,15 @@ _PyPegen_parse(Parser *p)
 # STARTING RULES
 # ==============
 
-file[mod_ty]: a=[statements] ENDMARKER { _PyPegen_make_module(p, a) }
+file[mod_ty]: parser_mode? a=[statements] ENDMARKER { _PyPegen_make_module(p, a) }
 interactive[mod_ty]: a=statement_newline { _PyAST_Interactive(a, p->arena) }
 eval[mod_ty]: a=expressions NEWLINE* ENDMARKER { _PyAST_Expression(a, p->arena) }
 func_type[mod_ty]: '(' a=[type_expressions] ')' '->' b=expression NEWLINE* ENDMARKER { _PyAST_FunctionType(a, b, p->arena) }
+
+parser_mode[void*]:
+    | '!' "pirx" NEWLINE+ { (p->pirx_mode = 1, (void*) 1) }
+    | '!' "python" NEWLINE+ { (p->pirx_mode = 0, (void*) 1) }
+
 
 # GENERAL STATEMENTS
 # ==================
@@ -108,6 +114,7 @@ simple_stmts[asdl_stmt_seq*]:
 # NOTE: assignment MUST precede expression, else parsing a simple assignment
 # will throw a SyntaxError.
 simple_stmt[stmt_ty] (memo):
+    | let_var_decl
     | assignment
     | &"type" type_alias
     | e=star_expressions { _PyAST_Expr(e, EXTRA) }
@@ -154,6 +161,11 @@ assignment[stmt_ty]:
     | a=single_target b=augassign ~ c=(yield_expr | star_expressions) {
          _PyAST_AugAssign(a, b->kind, c, EXTRA) }
     | invalid_assignment
+
+%pirx
+let_var_decl[stmt_ty]:
+    | "let" a=assignment { a }
+    | "var" a=assignment { a }
 
 annotated_rhs[expr_ty]: yield_expr | star_expressions
 

@@ -261,6 +261,12 @@ class PythonParserGenerator(ParserGenerator, GrammarVisitor):
         self.print(f"def {node.name}(self) -> Optional[{node_type}]:")
         with self.indent():
             self.print(f"# {node.name}: {rhs}")
+
+            if node.mode:
+                self.print(f"if self.mode != '{node.mode}':")
+                with self.indent():
+                    self.print("return None")
+
             self.print("mark = self._mark()")
             if self.alts_uses_locations(node.rhs.alts):
                 self.print("tok = self._tokenizer.peek()")

@@ -24,6 +24,7 @@ from pegen.grammar import (
     Rhs,
     Rule,
     RuleList,
+    RuleMode,
     RuleName,
     Grammar,
     StringLeaf,
@@ -50,11 +51,15 @@ rules[RuleList]:
     | rule { [rule] }
 
 rule[Rule]:
-    | rulename memoflag? ":" alts NEWLINE INDENT more_alts DEDENT {
-          Rule(rulename[0], rulename[1], Rhs(alts.alts + more_alts.alts), memo=opt) }
-    | rulename memoflag? ":" NEWLINE INDENT more_alts DEDENT {
-          Rule(rulename[0], rulename[1], more_alts, memo=opt) }
-    | rulename memoflag? ":" alts NEWLINE { Rule(rulename[0], rulename[1], alts, memo=opt) }
+    | rulemode? rulename memoflag? ":" alts NEWLINE INDENT more_alts DEDENT {
+          Rule(rulename[0], rulename[1], Rhs(alts.alts + more_alts.alts), memo=opt_1, mode=opt) }
+    | rulemode? rulename memoflag? ":" NEWLINE INDENT more_alts DEDENT {
+          Rule(rulename[0], rulename[1], more_alts, memo=opt_1, mode=opt) }
+    | rulemode? rulename memoflag? ":" alts NEWLINE { Rule(rulename[0], rulename[1], alts, memo=opt_1, mode=opt) }
+
+rulemode[RuleMode]:
+    | "%" "pirx" NEWLINE { RuleMode.PIRX }
+    | "%" "python" NEWLINE { RuleMode.PYTHON }
 
 rulename[RuleName]:
     | NAME annotation { (name.string, annotation) }
